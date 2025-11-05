@@ -171,5 +171,62 @@ int main() {
         std::cout << "ATENÇÃO❗: ciclo negativo detectado no grafo. Distâncias podem não ser confiáveis.\n";
 
         return 0;
+    } else {
+        UG g;
+        boost::dynamic_properties dp(boost::ignore_other_properties);
+        dp.property("node_id", get(&V::name, g));
+        dp.property("label",   get(&V::label, g));
+        dp.property("label",   get(&E::label, g));
+        if (!boost::read_graphviz(in, g, dp)) { std::cerr << "falha DOT\n"; return 2; }
+        std::cout << "Grafo não dirigido lido.\n";
+    
+        std::map<std::string, std::set<std::string>> listaadj;
+        for (auto e : boost::make_iterator_range(edges(g))) {
+            const std::string& u = g[source(e, g)].name;
+            const std::string& v = g[target(e, g)].name;
+            listaadj[u].insert(v); 
+            listaadj[v].insert(u);
+        }
+        std::set<std::string> pontos; //set com todos os pontos do grafo
+        for (auto e : boost::make_iterator_range(edges(g))) {
+            const std::string& u = g[source(e, g)].name;
+            const std::string& v = g[target(e, g)].name;
+            pontos.insert(v); 
+            pontos.insert(u);
+        }
+
+        while (true) {
+            std::cout << "Insira o vértice inicial: ";
+            std::cin >> start;
+            if (pontos.find(start) != pontos.end()) {
+                break; // vértice válido encontrado, sai do loop
+            } else {
+                std::cout << "Esse vértice não existe no grafo. Tente novamente.\n";
+            }
+        }
+
+        std::map<std::pair<std::string, std::string>, int> aresta_peso; //map que guarda os pares e pesos
+        for (auto e : boost::make_iterator_range(edges(g))) {
+            auto u = source(e, g);
+            auto v = target(e, g);
+            int peso = 0;
+            try {
+                peso = std::stoi(g[e].label); // converte label string para int
+            } catch (...) {
+                peso = 1; // valor padrão se conversão falhar
+            }
+            aresta_peso[{g[u].name, g[v].name}] = peso; // armazena peso no mapa
+        }
+
+        std::map<std::string, int> distancia; //map para armazenar a distancia ate certo ponto
+        bool ciclo_negativo; // booleana que armazena se temos ou nao um ciclo negativo
+        distancia = Bellman_Ford(start, pontos, listaadj, aresta_peso, ciclo_negativo);
+        exibir_distancias(distancia, start);
+       
+        // caso tenhamos um ciclo negativo
+        if (ciclo_negativo) 
+        std::cout << "ATENÇÃO❗: ciclo negativo detectado no grafo. Distâncias podem não ser confiáveis.\n";
+
+        return 0;
     }
 }
