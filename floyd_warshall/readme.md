@@ -10,4 +10,4 @@ Use o comando:
 
 g++ -std=c++17 floyd_warshall.cpp -o floyd_warshall -lboost_graph -lboost_regex
 
-Indique o 
+Indique o arquivo a ser lido durante a execução do programa.
